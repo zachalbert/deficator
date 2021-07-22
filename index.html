@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Welcome to Vue</title>
+  <script src="https://unpkg.com/vue"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha512-NhSC1YmyruXifcj/KFRWoC561YpHpc5Jtzgvbuzx5VozKpWvQ+4nXhPdFgmx8xqexRcpAglTj9sIBWINXa8x5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <div class="mascot">
+      <span class="hank">💩</span>
+      <span class="shadow"></span>
+    </div>
+    <h1>{{ title }}</h1>
+    <h2>{{ description }}</h2>
+    <!-- sell at: {{ sellAt }}<br />
+    ideal num of days: {{ idealNumOfDays }}<br />
+    final capital: {{ finalCapital }}<br />
+    total compounds: {{ totalCompounds }}<br /><br /> -->
+    <!-- {{ calculateOptimalTimeframe() }} -->
+
+    <div class="flex px-12 mb-12">
+      <div class="flex-1 px-4 text-left">
+        <label class="font-bold text-sm">Initial Capital
+          <input class="mt-2 w-full outline-none focus:ring-4 ring-yellow-900 focus:ring-opacity-50 border-2 border-gray-300 focus:border-yellow-900 rounded-lg p-4 text-xl" type="number" placeholder="Initial Capital" v-model.number="initialCapitalInput" />
+        </label>
+      </div>
+      <div class="flex-1 px-4 text-left">
+        <label class="font-bold text-sm">Daily Interest
+          <input class="mt-2 w-full outline-none focus:ring-4 ring-yellow-900 focus:ring-opacity-50 border-2 border-gray-300 focus:border-yellow-900 rounded-lg p-4 text-xl" type="number" placeholder="Daily Interest" v-model.number="dailyInterestInput" />
+        </label>
+      </div>
+      <div class="flex-1 px-4 text-left">
+        <label class="font-bold text-sm">Gas Fee
+          <input class="mt-2 w-full outline-none focus:ring-4 ring-yellow-900 focus:ring-opacity-50 border-2 border-gray-300 focus:border-yellow-900 rounded-lg p-4 text-xl" type="number" placeholder="Gas Fee" v-model.number="gasFeeInput" />
+        </label>
+      </div>
+    </div>
+
+    <button @click="simulate" :disabled="calculating" class="uppercase tracking-wider font-bold text-2xl py-4 px-12 rounded-full text-white bg-yellow-900 button">
+      <span v-if="calculating">😣</span>
+      <span v-else>Deficate!</span>
+    </button>
+    <!-- <template v-if="!calculating">
+      <template v-for="agent in agentList.agents">
+        {{ agent.compoundsAt }}<br/>
+      </template>
+    </template>
+    <template v-else>
+      Calculating...
+    </template> -->
+
+  </div>
+
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: {
+        title: 'DEFICATOR',
+        description: 'Defi calculator for optimum compounding',
+        docsURL: 'http://vuejs.org/guide/',
+        discordURL: 'https://chat.vuejs.org',
+        forumURL: 'http://forum.vuejs.org/',
+        calculating: false,
+        agents: [],
+        totalAgents: 200,
+        initialCapitalInput: '5000',
+        dailyInterestInput: '0.5',
+        gasFeeInput: '1.77',
+        timeModifierFloat: 24.0,
+        timeModifierInt: Math.round(this.timeModifierFloat),
+        simulationLength: 100,
+        idealAmtOfComps: 2,
+        intervalForOptimum: 0.1,
+        calculateUpTo: 300,
+        startNumOfDays: 1,
+        commissionFee: 0.001,
+        sellAt: 0, 
+        finalCapital: 0,
+        numOfCompounds: 0,
+        totalCompounds: 0,
+        idealNumOfDays: 0,
+      },
+      created: function() {
+        // Create all the individual agent strategies
+        // this.generateAgents();
+
+        // Start simulating
+        // await this.simulateAgents().then(() => {
+        //   this.calculating = false;
+        // });
+
+        // setTimeout(() => {
+        //   this.agents = this.agents ? this.agents : {};
+        //   this.$set(
+        //     this.agents,
+        //     'items',
+        //     [
+        //       {compoundsAt: 100},
+        //       {compoundsAt: 200},
+        //       {compoundsAt: 300},
+        //     ]
+        //   );
+        //   this.calculating = false;
+        // }, 1500);
+
+
+        // this.calculating = true;
+        // this.agentList = this.agentList ? this.agentList : {};
+        
+        // let strats = new Array();
+        // for( let i = 0; i < 10000; i++ ) {
+        //   strats.push(
+        //     {compoundsAt: i+50}
+        //   )
+        // }
+
+        // this.$set(
+        //   this.agentList,
+        //   'agents',
+        //   strats
+        // );
+
+        // this.calculating = false;
+      },
+      methods: {
+        simulate() {
+          if( this.calculating ) return;
+
+          this.calculating = true;
+          setTimeout(() => {
+            this.simulateAgents();
+          }, 50);
+        },
+        simulateAgents() {
+          console.log('Running simulation...');
+          let gasFee = parseFloat(this.gasFeeInput);
+          let interestRate = (parseFloat(this.dailyInterestInput)/100);
+          let finalTally = new Array();
+          
+          // Run simulation for each agent
+          for( let i = 0; i < this.totalAgents; i++ ) {
+            // Reset stack + rewards for this agent
+            let stack = parseFloat(this.initialCapitalInput);
+            let rewards = 0.0;
+
+            // start compounding at the whole number above gasFee
+            let compoundAt = Math.ceil(parseFloat(this.gasFeeInput)) + i;
+            let avgDaysCompounded = new Array();
+            let daysSinceLastCompound = 0;
+
+            // Simulate this agent's compounding strategy for X days
+            for( let day = 1; day < this.simulationLength; day++ ) {
+              // Track days since last compound
+              daysSinceLastCompound++;
+
+              // Earn rewards on total stack
+              rewards += this.earnInterest(stack, interestRate);
+              
+              // Have rewards grown past this agent's compoundAt level?
+              if( rewards >= compoundAt ) {
+                // Yes, compound (add rewards to stack - gas fees)
+                stack += rewards - gasFee;
+                // console.log(`Day ${day}) Stack: ${stack}`)
+                rewards = 0.0;
+                avgDaysCompounded.push(daysSinceLastCompound)
+                daysSinceLastCompound = 0;
+              }
+
+              // console.log(`Agent ${i}, day ${j}, stack size: `, stack);
+            }
+
+            stack = Math.round(stack * 100) / 100;
+
+            // Calculate final tally for this agent
+            finalTally.push(stack);
+            console.log(`Agent ${i} earned $${stack} by compounding when rewards are > $${compoundAt}`)
+
+            // Average days per compound
+            // Note this is pretty useless... it decreases with every compound. Maybe a bar chart.
+            // const avgDaysSinceLastCompound = Math.round( ((avgDaysCompounded.reduce((a, b) => a + b, 0))/avgDaysCompounded.length) * 100) / 100;
+            // console.log(`Agent ${i} compounded every ${avgDaysSinceLastCompound} days, and earned $${stack}`);
+
+          }
+
+          this.calculating = false;
+        },
+        earnInterest(capital, rate) {
+          return capital * rate;
+        }
+        // simulate: function() {
+        //   if (this.calculating) {
+        //     console.log('returned');
+        //     return;
+        //   }
+          
+        //   this.calculating = true;
+        //   console.log('Simulating...');
+
+        //   const idealNumOfDays = this.calculateOptimalTimeframe();
+        //   [this.sellAt, this.finalCapital, this.numOfCompounds] = this.calculateOptimum(idealNumOfDays);
+
+        //   console.log(idealNumOfDays);
+
+        //   this.calculating = false;
+        // },
+        // compound: function(capital, rewards) {
+        //   capital += rewards * (1.0 - this.commissionFee) - this.gasFee;
+        //   rewards = 0.0;
+        //   return [capital, rewards];
+        // },
+        // runSimulation: function(rewardValue, numOfDays) {          
+        //   let dayCount = 1;
+        //   let amtCompounded = 0;
+        //   let rewards = 0.0;
+        //   let capital = parseInt(this.initialCapital);
+        //   let totalTime = numOfDays * this.timeModifierInt;
+
+        //   while( dayCount <= totalTime ) {
+        //     rewards += capital * interestRate;
+        //     if( rewards > rewardValue ) {
+        //       [capital, rewards] = this.compound(capital, rewards);
+        //       amtCompounded++;
+        //     }
+        //     dayCount++;
+        //   }
+
+        //   if( rewards > this.gasFee ) {
+        //     [capital, rewards] = this.compound(capital, rewards);
+        //     amtCompounded++;
+        //   }
+
+        //   return [capital, amtCompounded];
+        // },
+        // calculateOptimum(numOfDays) {
+        //   let i = 1.0;
+        //   let max_i = 0.0;
+        //   let maxCapital = 0.0;
+        //   let maxAmtCompounded = 0;
+        //   let provCapital = 0.0;
+        //   let provAmtCompounded = 0;
+
+        //   while( i <= this.calculateUpTo ) {
+        //     const [provCapital, provAmtCompounded] = this.runSimulation(i, numOfDays);
+
+        //     if( provCapital > maxCapital) {
+        //       maxCapital = provCapital;
+        //       maxAmtCompounded = provAmtCompounded;
+        //       max_i = i;
+        //     }
+
+        //     i += this.intervalForOptimum;
+        //   }
+
+        //   return [max_i, maxCapital, maxAmtCompounded];
+        // },
+        // calculateOptimalTimeframe: function() {
+        //   let runningNumOfDays = this.startNumOfDays;
+        //   let optimalNumOfDays = 0;
+        //   let optimalCapital = 0;
+
+        //   while( this.numOfCompounds <= this.idealAmtOfComps ) {
+        //     [this.sellAt, this.finalCapital, this.numOfCompounds] = this.calculateOptimum(runningNumOfDays);
+
+        //     if( this.numOfCompounds == this.idealAmtOfComps ) {
+        //       if( this.finalCapital > optimalCapital ) {
+        //         optimalCapital = finalCapital;
+        //         optimalNumOfDays = runningNumOfDays;
+        //       }
+        //     }
+
+        //     runningNumOfDays++;
+        //   }
+
+        //   return optimalNumOfDays;
+        // },
+      }
+    })
+  </script>
+</body>
+</html>
+
+<style>
+  #app {
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica, Ubuntu, roboto, noto, arial, sans-serif;
+  }
+
+  .button[disabled] {
+    background-color: rgba(120,53,15,0.8);
+    pointer-events: none;
+  }
+
+  h1 {
+    font-size: 4rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    margin: 0;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: rgba(0,0,0,0.8);
+    margin-bottom: 2rem;
+  }
+
+  .mascot {
+    margin: 2rem auto;
+    display: inline-block;
+    padding-bottom: 3rem;
+    position: relative;
+  }
+
+  .mascot .hank {
+    position: relative;
+    display: block;
+    font-size: 8rem;
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .mascot .shadow {
+    background: rgba(0,0,0,0.3);
+    width: 100%;
+    display: block;
+    height: 1.5rem;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 0;
+    animation: float-shadow 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+
+    50% {
+      transform: translate3d(0, 0.5rem, 0);
+    }
+  }
+
+  @keyframes float-shadow {
+    0% {
+      transform: scale(0.65)
+    }
+
+    50% {
+      transform: scale(0.8);
+    }
+
+    100% {
+      transform: scale(0.65);
+    }
+  }
+</style>
