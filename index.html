@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha512-NhSC1YmyruXifcj/KFRWoC561YpHpc5Jtzgvbuzx5VozKpWvQ+4nXhPdFgmx8xqexRcpAglTj9sIBWINXa8x5w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-gray-100">
   <div id="app">
     <div class="mascot">
       <span class="hank">💩</span>
@@ -20,19 +20,19 @@
     total compounds: {{ totalCompounds }}<br /><br /> -->
     <!-- {{ calculateOptimalTimeframe() }} -->
 
-    <div class="flex px-12 mb-12">
+    <div class="flex px-12 mb-12 max-w-4xl mx-auto">
       <div class="flex-1 px-4 text-left">
-        <label class="font-bold text-sm">Initial Capital
+        <label class="font-bold text-sm">Initial Capital ($USD)
           <input class="mt-2 w-full outline-none focus:ring-4 ring-yellow-900 focus:ring-opacity-50 border-2 border-gray-300 focus:border-yellow-900 rounded-lg p-4 text-xl" type="number" placeholder="Initial Capital" v-model.number="initialCapitalInput" />
         </label>
       </div>
       <div class="flex-1 px-4 text-left">
-        <label class="font-bold text-sm">Daily Interest
+        <label class="font-bold text-sm">Daily Interest (%)
           <input class="mt-2 w-full outline-none focus:ring-4 ring-yellow-900 focus:ring-opacity-50 border-2 border-gray-300 focus:border-yellow-900 rounded-lg p-4 text-xl" type="number" placeholder="Daily Interest" v-model.number="dailyInterestInput" />
         </label>
       </div>
       <div class="flex-1 px-4 text-left">
-        <label class="font-bold text-sm">Gas Fee
+        <label class="font-bold text-sm">Gas Fee ($USD)
           <input class="mt-2 w-full outline-none focus:ring-4 ring-yellow-900 focus:ring-opacity-50 border-2 border-gray-300 focus:border-yellow-900 rounded-lg p-4 text-xl" type="number" placeholder="Gas Fee" v-model.number="gasFeeInput" />
         </label>
       </div>
@@ -42,6 +42,7 @@
       <span v-if="calculating">😣</span>
       <span v-else>Deficate!</span>
     </button>
+    <h4 class="mt-8 text-red-600">TEMPORARY: open the browser console to see the output of the simulation</h4>
     <!-- <template v-if="!calculating">
       <template v-for="agent in agentList.agents">
         {{ agent.compoundsAt }}<br/>
